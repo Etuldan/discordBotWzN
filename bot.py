@@ -31,9 +31,6 @@ class Bot(discord.Client):
 
         config = configparser.ConfigParser()
         config.read('config.ini')
-        self.channelIdFlash = int(config['Channel']['Flash'])
-        self.channelIdGestionFlash = int(config['Channel']['GestionFlash'])
-        self.channelIdGestionDailyFlash = int(config['Channel']['GestionDailyFlash'])
 
         self.userIdCollaborateur = int(config['Role']['Collaborateur'])
         self.token = config['Discord']['Token']
@@ -42,7 +39,7 @@ class Bot(discord.Client):
         for tempid in tempList:
             self.guild_ids.append((int(tempid)))
 
-        self.con = sqlite3.connect('database.db')
+        self.con = sqlite3.connect('wzn.db')
 
 
         client = gspread.service_account(filename = 'weazel-news-331709-b0d89286ef38.json', scopes = gspread.auth.READONLY_SCOPES)
@@ -58,18 +55,15 @@ class Bot(discord.Client):
         embed=discord.Embed(title=ctx.selected_options[0].split(';')[0],
                             description="Prix véhicule HT : " + ctx.selected_options[0].split(';')[1] + "$",
                             color=0xFF5733)
+        amount = round(int(ctx.selected_options[0].split(';')[1])*2/100 if int(ctx.selected_options[0].split(';')[1])>50000 else int(ctx.selected_options[0].split(';')[1])*1/100)
         description="Prix véhicule HT : " + ctx.selected_options[0] + "$",
-        embed.add_field(name="Flash", value=str(int(ctx.selected_options[0].split(';')[1]) + 1000) + "$", inline=True)
-        embed.add_field(name="Classified", value=str(int(ctx.selected_options[0].split(';')[1]) + 600) + "$", inline=True)
+        embed.add_field(name="Flash", value=str(amount+1000) + "$", inline=True)
+        embed.add_field(name="Classified", value=str(amount+600) + "$", inline=True)
         await ctx.edit_origin(description = description, embed=embed)
 
     async def on_ready(self):
         print(str(self.client.user) + " has connected to Discord")
         print("Bot ID is " + str(self.client.user.id))
-        
-        self.channelFlash = self.client.get_channel(self.channelIdFlash)
-        self.channelGestionFlash = self.client.get_channel(self.channelIdGestionFlash)
-        self.channelGestionDailyFlash = self.client.get_channel(self.channelIdGestionDailyFlash)
 
         await self.client.wait_until_ready()
 
@@ -111,17 +105,17 @@ async def _prix(ctx: SlashContext, modele: str):
         amount = int(bot.sheet.worksheet("Vehicules").cell(cell_list[0].row, cell_list[0].col+1).value)
         modele = bot.sheet.worksheet("Vehicules").cell(cell_list[0].row, cell_list[0].col).value
 
-    embed=discord.Embed(title=modele,
-                        description="Prix véhicule HT : " + str(amount) + "$",
-                        color=0xFF5733)
-    if(amount > 50000):
-        amount = int(amount * 2/100)
-    else:
-        amount = int(amount * 1/100)    
-    embed.add_field(name="Flash", value=str(amount + 1000) + "$", inline=True)
-    embed.add_field(name="Classified", value=str(amount + 600) + "$", inline=True)
+        embed=discord.Embed(title=modele,
+                            description="Prix véhicule HT : " + str(amount) + "$",
+                            color=0xFF5733)
+        if(amount > 50000):
+            amount = int(amount * 2/100)
+        else:
+            amount = int(amount * 1/100)    
+        embed.add_field(name="Flash", value=str(amount + 1000) + "$", inline=True)
+        embed.add_field(name="Classified", value=str(amount + 600) + "$", inline=True)
 
-    await ctx.send(embed=embed, hidden=True)
+        await ctx.send(embed=embed, hidden=True)
     else:
         embed=discord.Embed(title=modele,
                             description="Prix véhicule HT",
@@ -142,6 +136,6 @@ async def _prix(ctx: SlashContext, modele: str):
         )
         action_row = create_actionrow(select)
 
-    await ctx.send(embed=embed, hidden=True, components=[action_row])
+        await ctx.send(embed=embed, hidden=True, components=[action_row])
     
 bot.run()
