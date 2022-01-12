@@ -12,7 +12,6 @@ import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 
 import configparser
-import sqlite3
 
 COLOR_RED = 0xE74C3C
 COLOR_GREEN = 0x00ff00
@@ -38,9 +37,6 @@ class Bot(discord.Client):
         tempList  = config['Discord']['GuildID'].split(',')
         for tempid in tempList:
             self.guild_ids.append((int(tempid)))
-
-        self.con = sqlite3.connect('wzn.db')
-
 
         client = gspread.service_account(filename = 'weazel-news-331709-b0d89286ef38.json', scopes = gspread.auth.READONLY_SCOPES)
         self.sheet = client.open_by_key("1cJh0ZlXKX5WcaYfVzGlKs09nwa2D3aoKZqQMx02s7Q4")
